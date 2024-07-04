@@ -45,7 +45,7 @@ class RecipeViewSet(ModelViewSet):
         short_link = recipe.short_link
         if not short_link:
             return Response(
-                {'error': 'Короткая ссылка не существует.'}, 
+                {'error': 'Короткая ссылка не существует.'},
                 status=status.HTTP_404_NOT_FOUND)
         return Response({'short-link': short_link})
 
@@ -53,10 +53,6 @@ class RecipeViewSet(ModelViewSet):
             url_name='favorite', permission_classes=[IsAuthenticated])
     def favorite(self, request, pk):
         if request.method == 'POST':
-            serializer = FavoriteCreateSerializer(
-                data={
-                    'recipe': pk}, context={
-                    'request': request})
             if Favourite.objects.filter(
                     user=request.user, recipe__id=pk).exists():
                 return Response({'errors': 'Рецепт уже был добавлен'},
