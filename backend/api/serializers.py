@@ -21,11 +21,11 @@ from users.validators import validate_username
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')  
-            ext = format.split('/')[-1]  
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
-    
+
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
@@ -43,7 +43,14 @@ class CustomUserSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'avatar')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'avatar')
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
@@ -57,7 +64,8 @@ class SubscribeSerializer(CustomUserSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ('recipes_count', 'recipes')
+        fields = CustomUserSerializer.Meta.fields + \
+            ('recipes_count', 'recipes')
         read_only_fields = ('email', 'username')
 
     def get_recipes(self, obj):
@@ -87,6 +95,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class AvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(required=True, allow_null=True)
+
     class Meta:
         model = User
         fields = ['avatar']
@@ -100,7 +109,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField(required=False, allow_null=True)
     short_link = serializers.CharField(source='get_short_link', read_only=True)
-    
+
     class Meta:
         model = Recipe
         fields = (
@@ -130,9 +139,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         return (
             self.context.get('request').user.is_authenticated
             and Favourite.objects.filter(user=self.context['request'].user,
-                                        recipe=obj).exists()
+                                         recipe=obj).exists()
         )
-
 
     def get_is_in_shopping_cart(self, obj):
         return (
@@ -155,7 +163,8 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(many=True,queryset=Tag.objects.all(),required=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all(), required=True)
     author = CustomUserSerializer(read_only=True)
     ingredients = IngredientRecipeSerializer(many=True)
     image = Base64ImageField()
@@ -237,7 +246,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.tags.clear()
         instance.tags.set(tags)
         instance.ingredients.clear()
-        self.create_ingredients_amounts(recipe=instance, ingredients=ingredients)
+        self.create_ingredients_amounts(
+            recipe=instance, ingredients=ingredients)
         instance.save()
         return instance
 
@@ -268,7 +278,8 @@ class FavoriteCreateSerializer(serializers.Serializer):
         recipe = attrs['recipe']
         if self.context['request'].method == 'POST':
             if Favourite.objects.filter(user=user, recipe=recipe).exists():
-                raise serializers.ValidationError('Рецепт уже добавлен в избранное')
+                raise serializers.ValidationError(
+                    'Рецепт уже добавлен в избранное')
         elif self.context['request'].method == 'DELETE':
             if not Favourite.objects.filter(user=user, recipe=recipe).exists():
                 raise serializers.ValidationError(

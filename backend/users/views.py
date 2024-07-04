@@ -23,18 +23,22 @@ class CustomUserViewSet(UserViewSet):
         if request.method == 'POST':
             author_id = self.kwargs.get('id')
             author = get_object_or_404(User, id=author_id)
-            serializer = SubscribeSerializer(author, data=request.data, context={"request": request})
+            serializer = SubscribeSerializer(
+                author, data=request.data, context={
+                    "request": request})
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=request.user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             author_id = self.kwargs.get('id')
             author = get_object_or_404(User, id=author_id)
-            subscription = get_object_or_404(Subscribe, user=request.user, author=author)
+            subscription = get_object_or_404(
+                Subscribe, user=request.user, author=author)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
@@ -43,13 +47,16 @@ class CustomUserViewSet(UserViewSet):
                                          many=True,
                                          context={'request': request})
         return self.get_paginated_response(serializer.data)
-    
-    @action(detail=False, methods=['put', 'delete'], permission_classes=[IsAuthenticated], url_path='me/avatar')
+
+    @action(detail=False, methods=['put', 'delete'],
+            permission_classes=[IsAuthenticated], url_path='me/avatar')
     def avatar(self, request):
         user = request.user
 
         if request.method == 'PUT':
-            serializer = AvatarSerializer(data=request.data, context={'request': request})
+            serializer = AvatarSerializer(
+                data=request.data, context={
+                    'request': request})
             serializer.is_valid(raise_exception=True)
             serializer.update(user, serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_200_OK)

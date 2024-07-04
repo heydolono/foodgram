@@ -24,7 +24,7 @@ class User(AbstractUser):
         'Фамилия', blank=True, null=True, max_length=50)
     avatar = models.ImageField(
         upload_to='avatars/',
-        null=True,  
+        null=True,
         default=None,
         verbose_name='Аватар',
     )
@@ -56,7 +56,11 @@ class Subscribe(models.Model):
     class Meta:
         ordering = ['author']
         constraints = [
-            UniqueConstraint(fields=['user', 'author'], name='unique_subscription')
+            UniqueConstraint(
+                fields=[
+                    'user',
+                    'author'],
+                name='unique_subscription')
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'

@@ -14,4 +14,3 @@ def validate_username(value):
     if value in settings.NICKNAME_BLACKLIST:
         raise ValidationError(f'Нельзя использовать никнейм "{value}".')
     return value
-
