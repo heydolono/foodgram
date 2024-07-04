@@ -45,7 +45,8 @@ class RecipeViewSet(ModelViewSet):
         short_link = recipe.short_link
         if not short_link:
             return Response(
-                {'error': 'Короткая ссылка не существует.'}, status=status.HTTP_404_NOT_FOUND)
+                {'error': 'Короткая ссылка не существует.'}, 
+                status=status.HTTP_404_NOT_FOUND)
         return Response({'short-link': short_link})
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite',
@@ -65,10 +66,6 @@ class RecipeViewSet(ModelViewSet):
             serializerrec = RecipeShortSerializer(recipe)
             return Response(serializerrec.data, status=status.HTTP_201_CREATED)
         else:
-            serializer = FavoriteCreateSerializer(
-                data={
-                    'recipe': pk}, context={
-                    'request': request})
             obj = Favourite.objects.filter(user=request.user, recipe__id=pk)
             if obj.exists():
                 obj.delete()
@@ -103,15 +100,17 @@ class RecipeViewSet(ModelViewSet):
         if not user.shopping_cart.exists():
             return Response({'errors': 'Корзина покупок пуста'},
                             status=status.HTTP_400_BAD_REQUEST)
-        ingredients = IngredientRecipe.objects.filter(recipe__shopping_cart__user=request.user).values(
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_cart__user=request.user).values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         shopping_list = 'Список покупок \n'
         shopping_items = []
         for ingredient in ingredients:
-            item = (f'- {ingredient["ingredient__name"]} ' 
-            f'({ingredient["ingredient__measurement_unit"]}) - {ingredient["amount"]}')
+            item = (f'- {ingredient["ingredient__name"]} '
+                    f'({ingredient["ingredient__measurement_unit"]})'
+                    f' - {ingredient["amount"]}')
             shopping_items.append(item)
 
         shopping_list += '\n'.join(shopping_items)
