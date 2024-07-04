@@ -73,8 +73,7 @@ class SubscribeSerializer(CustomUserSerializer):
         recipes = obj.recipes.all()
         if limit:
             recipes = recipes[:int(limit)]
-        serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
-        return serializer.data
+        return RecipeShortSerializer(recipes, many=True, read_only=True)
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -126,28 +125,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        ingredients = obj.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('ingredientrecipe__amount')
+        return obj.ingredients.annotate(amount=F('ingredientrecipe__amount')).values(
+            'id', 'name', 'measurement_unit', 'amount'
         )
-        return ingredients
 
     def get_is_favorited(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and Favourite.objects.filter(user=self.context['request'].user,
-                                         recipe=obj).exists()
-        )
+        user = self.context['request'].user
+        return user.is_authenticated and Favourite.objects.filter(
+            user=user, recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        return (
-            self.context.get('request').user.is_authenticated
-            and ShoppingCart.objects.filter(
-                user=self.context['request'].user,
-                recipe=obj).exists()
-        )
+        user = self.context['request'].user
+        return user.is_authenticated and ShoppingCart.objects.filter(user=user, recipe=obj).exists()
 
     def get_short_link(self, obj):
         return obj.short_link
@@ -183,76 +172,62 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'short_link',
         )
 
-    def validate_ingredients(self, value):
-        ingredients = value
+    def validate_ingredients(self, ingredients):
         if not ingredients:
-            raise ValidationError({
-                'ingredients': 'Добавьте ингредиент'
-            })
-        ingredients_list = []
+            raise ValidationError({'ingredients': 'Добавьте ингредиент'})
+        unique_ingredients = set()
         for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингредиенты не должны повторяться'
-                })
-            if int(item['amount']) <= 0:
-                raise ValidationError({
-                    'amount': 'Количество ингредиентов должно быть больше нуля'
-                })
-            ingredients_list.append(ingredient)
-        return value
+            ingredient_id = item.get('id')
+            amount = item.get('amount')
+            if not ingredient_id or not amount:
+                raise ValidationError({'ingredients': 'Неверные данные об ингредиентах'})
+            if ingredient_id in unique_ingredients:
+                raise ValidationError({'ingredients': 'Ингредиенты не должны повторяться'})
+            if amount <= 0:
+                raise ValidationError({'amount': 'Количество ингредиентов должно быть больше нуля'})
+            unique_ingredients.add(ingredient_id)
+        return ingredients
 
-    def validate_tags(self, value):
-        tags = value
+    def validate_tags(self, tags):
         if not tags:
             raise ValidationError({'tags': 'Нужно выбрать тег'})
-        tags_list = []
-        for tag in tags:
-            if tag in tags_list:
-                raise ValidationError({'tags': 'Тег не должен повторяться'})
-            tags_list.append(tag)
-        return value
+        if len(tags) != len(set(tags)):
+            raise ValidationError({'tags': 'Тег не должен повторяться'})
+        return tags
+    
+    def create_short_link(self):
+        current_domain = self.context['request'].get_host()
+        return f'{current_domain}/s/{get_random_string(length=10)}'
 
-    @transaction.atomic
-    def create_ingredients_amounts(self, ingredients, recipe):
-        IngredientRecipe.objects.bulk_create(
-            [IngredientRecipe(
-                ingredient=Ingredient.objects.get(id=ingredient['id']),
-                recipe=recipe,
-                amount=ingredient['amount']
-            ) for ingredient in ingredients]
-        )
-
-    @transaction.atomic
     def create(self, validated_data):
-        tags = validated_data.pop('tags', [])
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        request = self.context.get('request')
-        current_domain = request.get_host()
-        short_link = f'{current_domain}/s/{get_random_string(length=10)}'
-        validated_data['short_link'] = short_link
+        validated_data['short_link'] = self.create_short_link()
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        self.create_ingredients_amounts(recipe=recipe, ingredients=ingredients)
+        self._create_ingredient_recipes(recipe, ingredients)
         return recipe
-
-    @transaction.atomic
+    
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags', [])
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         instance = super().update(instance, validated_data)
-        instance.tags.clear()
         instance.tags.set(tags)
         instance.ingredients.clear()
-        self.create_ingredients_amounts(
-            recipe=instance, ingredients=ingredients)
-        instance.save()
+        self._create_ingredient_recipes(instance, ingredients)
         return instance
+    
+    def _create_ingredient_recipes(self, recipe, ingredients):
+        IngredientRecipe.objects.bulk_create([
+            IngredientRecipe(
+                recipe=recipe, 
+                ingredient_id=ingredient['id'], 
+                amount=ingredient['amount']
+            ) for ingredient in ingredients
+        ])
 
     def to_representation(self, instance):
-        request = self.context.get('request')
-        context = {'request': request}
+        context = {'request': self.context['request']}
         return RecipeSerializer(instance, context=context).data
 
 
@@ -272,19 +247,19 @@ class FavoriteCreateSerializer(serializers.Serializer):
         model = Favourite
         fields = ('user', 'recipe')
 
-    def validate(self, attrs):
+    def validate(self, data):
         user = self.context['request'].user
-        recipe = attrs['recipe']
+        recipe = data.get('recipe')
         if self.context['request'].method == 'POST':
             if Favourite.objects.filter(user=user, recipe=recipe).exists():
-                raise serializers.ValidationError(
-                    'Рецепт уже добавлен в избранное')
+                raise ValidationError('Рецепт уже добавлен в избранное')
         elif self.context['request'].method == 'DELETE':
             if not Favourite.objects.filter(user=user, recipe=recipe).exists():
-                raise serializers.ValidationError(
-                    'Рецепт уже удален из избранного'
-                )
-        return attrs
+                raise ValidationError('Рецепт уже удален из избранного')
+        return data
 
     def create(self, validated_data):
-        return Favourite.objects.create(**validated_data)
+        user = self.context['request'].user
+        recipe = validated_data.get('recipe')
+        favourite, created = Favourite.objects.get_or_create(user=user, recipe=recipe)
+        return favourite
