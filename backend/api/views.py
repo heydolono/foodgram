@@ -1,8 +1,6 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.views import View
-from django.shortcuts import get_object_or_404, redirect
-from django.views.generic.base import RedirectView
+from django.shortcuts import get_object_or_404
 from recipes.models import (Favourite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import status
@@ -112,7 +110,8 @@ class RecipeViewSet(ModelViewSet):
         shopping_list = 'Список покупок \n'
         shopping_items = []
         for ingredient in ingredients:
-            item = f'- {ingredient["ingredient__name"]} ({ingredient["ingredient__measurement_unit"]}) - {ingredient["amount"]}'
+            item = f'- {ingredient["ingredient__name"]} 
+            ({ingredient["ingredient__measurement_unit"]}) - {ingredient["amount"]}'
             shopping_items.append(item)
 
         shopping_list += '\n'.join(shopping_items)

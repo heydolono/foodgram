@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponseRedirect
 from .models import Recipe
 
 

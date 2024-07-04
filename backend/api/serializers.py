@@ -2,11 +2,10 @@ import base64
 from django.db import transaction
 from django.db.models import F
 from django.core.files.base import ContentFile
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.exceptions import ValidationError
 
