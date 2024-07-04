@@ -187,7 +187,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
                     {'ingredients': 'Ингредиенты не должны повторяться'})
             if amount <= 0:
                 raise ValidationError(
-                    {'amount': 'Количество ингредиентов должно быть больше нуля'})
+                    {'amount': 
+                     'Количество ингредиентов должно быть больше нуля'})
             unique_ingredients.add(ingredient_id)
         return ingredients
 
