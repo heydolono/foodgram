@@ -1,8 +1,6 @@
 import base64
-from django.db import transaction
 from django.db.models import F
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
@@ -125,7 +123,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        return obj.ingredients.annotate(amount=F('ingredientrecipe__amount')).values(
+        return obj.ingredients.annotate(amount=F(
+            'ingredientrecipe__amount')).values(
             'id', 'name', 'measurement_unit', 'amount'
         )
 
@@ -136,7 +135,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+        return user.is_authenticated and ShoppingCart.objects.filter(
+            user=user, recipe=obj).exists()
 
     def get_short_link(self, obj):
         return obj.short_link
@@ -180,11 +180,14 @@ class RecipePostSerializer(serializers.ModelSerializer):
             ingredient_id = item.get('id')
             amount = item.get('amount')
             if not ingredient_id or not amount:
-                raise ValidationError({'ingredients': 'Неверные данные об ингредиентах'})
+                raise ValidationError(
+                    {'ingredients': 'Неверные данные об ингредиентах'})
             if ingredient_id in unique_ingredients:
-                raise ValidationError({'ingredients': 'Ингредиенты не должны повторяться'})
+                raise ValidationError(
+                    {'ingredients': 'Ингредиенты не должны повторяться'})
             if amount <= 0:
-                raise ValidationError({'amount': 'Количество ингредиентов должно быть больше нуля'})
+                raise ValidationError(
+                    {'amount': 'Количество ингредиентов должно быть больше нуля'})
             unique_ingredients.add(ingredient_id)
         return ingredients
 
@@ -194,7 +197,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         if len(tags) != len(set(tags)):
             raise ValidationError({'tags': 'Тег не должен повторяться'})
         return tags
-    
+
     def create_short_link(self):
         current_domain = self.context['request'].get_host()
         return f'{current_domain}/s/{get_random_string(length=10)}'
@@ -207,7 +210,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         recipe.tags.set(tags)
         self._create_ingredient_recipes(recipe, ingredients)
         return recipe
-    
+
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -216,12 +219,12 @@ class RecipePostSerializer(serializers.ModelSerializer):
         instance.ingredients.clear()
         self._create_ingredient_recipes(instance, ingredients)
         return instance
-    
+
     def _create_ingredient_recipes(self, recipe, ingredients):
         IngredientRecipe.objects.bulk_create([
             IngredientRecipe(
-                recipe=recipe, 
-                ingredient_id=ingredient['id'], 
+                recipe=recipe,
+                ingredient_id=ingredient['id'],
                 amount=ingredient['amount']
             ) for ingredient in ingredients
         ])
@@ -261,5 +264,6 @@ class FavoriteCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self.context['request'].user
         recipe = validated_data.get('recipe')
-        favourite, created = Favourite.objects.get_or_create(user=user, recipe=recipe)
+        favourite, created = Favourite.objects.get_or_create(
+            user=user, recipe=recipe)
         return favourite
