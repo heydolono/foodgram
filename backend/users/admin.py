@@ -6,11 +6,20 @@ from .models import Subscribe, User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'id', 'email', 'first_name', 'last_name',)
-    search_fields = ('email', 'username')
-    list_filter = ('email', 'username')
+    list_display = (
+        "username",
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+    )
+    search_fields = ("email", "username")
+    list_filter = ("email", "username")
 
 
 @admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'author',)
+    list_display = (
+        "user",
+        "author",
+    )
