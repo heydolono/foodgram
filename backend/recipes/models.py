@@ -7,8 +7,14 @@ from users.models import User
 class Tag(models.Model):
     """Класс модели Тег"""
 
-    name = models.CharField(max_length=50, verbose_name="Название тега", unique=True)
-    color = models.CharField(max_length=7, verbose_name="Цветовой HEX-код", unique=True)
+    name = models.CharField(
+        max_length=50, 
+        verbose_name="Название тега", 
+        unique=True)
+    color = models.CharField(
+        max_length=7, 
+        verbose_name="Цветовой HEX-код", 
+        unique=True)
     slug = models.SlugField(max_length=50, verbose_name="Слаг", unique=True)
 
     class Meta:
@@ -22,8 +28,12 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """Класс модели Ингредиент"""
 
-    name = models.CharField(max_length=100, verbose_name="Название ингредиента")
-    measurement_unit = models.CharField(max_length=50, verbose_name="Единица измерения")
+    name = models.CharField(
+        max_length=100, 
+        verbose_name="Название ингредиента")
+    measurement_unit = models.CharField(
+        max_length=50, 
+        verbose_name="Единица измерения")
 
     class Meta:
         verbose_name = "Ингредиент"
@@ -161,7 +171,10 @@ class ShoppingCart(models.Model):
         verbose_name = "Корзина"
         verbose_name_plural = "Корзина"
         constraints = [
-            UniqueConstraint(fields=["user", "recipe"], name="unique_shopping_cart")
+            UniqueConstraint(
+                fields=[
+                    "user", "recipe"],
+                name="unique_shopping_cart")
         ]
 
     def __str__(self):
