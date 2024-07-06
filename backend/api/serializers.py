@@ -57,7 +57,10 @@ class SubscribeSerializer(CustomUserSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ("recipes_count","recipes")
+        fields = (
+            CustomUserSerializer.Meta.fields
+            + ("recipes_count", "recipes")
+        )
         read_only_fields = ("email", "username")
 
     def get_recipes(self, obj):
@@ -77,11 +80,11 @@ class SubscribeSerializer(CustomUserSerializer):
         author_id = data.get("author")
         if self.context["request"].method == "POST":
             if Subscribe.objects.filter(
-                user=user, author_id=author_id).exists():
+                    user=user, author_id=author_id).exists():
                 raise ValidationError("Вы уже подписаны на этого автора")
         elif self.context["request"].method == "DELETE":
             if not Subscribe.objects.filter(
-                user=user, author_id=author_id).exists():
+                    user=user, author_id=author_id).exists():
                 raise ValidationError("Вы не подписаны на этого автора")
         return data
 
@@ -211,7 +214,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 )
             if amount <= 0:
                 raise ValidationError(
-                    {"amount": 
+                    {"amount":
                      "Количество ингредиентов должно быть больше нуля"}
                 )
             unique_ingredients.add(ingredient_id)
