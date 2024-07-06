@@ -57,7 +57,7 @@ class SubscribeSerializer(CustomUserSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ("recipes_count", "recipes")
+        fields = CustomUserSerializer.Meta.fields + ("recipes_count","recipes")
         read_only_fields = ("email", "username")
 
     def get_recipes(self, obj):
@@ -76,10 +76,12 @@ class SubscribeSerializer(CustomUserSerializer):
         user = self.context["request"].user
         author_id = data.get("author")
         if self.context["request"].method == "POST":
-            if Subscribe.objects.filter(user=user, author_id=author_id).exists():
+            if Subscribe.objects.filter(
+                user=user, author_id=author_id).exists():
                 raise ValidationError("Вы уже подписаны на этого автора")
         elif self.context["request"].method == "DELETE":
-            if not Subscribe.objects.filter(user=user, author_id=author_id).exists():
+            if not Subscribe.objects.filter(
+                user=user, author_id=author_id).exists():
                 raise ValidationError("Вы не подписаны на этого автора")
         return data
 
@@ -138,7 +140,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        return obj.ingredients.annotate(amount=F("ingredientrecipe__amount")).values(
+        return obj.ingredients.annotate(amount=F(
+            "ingredientrecipe__amount")).values(
             "id", "name", "measurement_unit", "amount"
         )
 
@@ -208,7 +211,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 )
             if amount <= 0:
                 raise ValidationError(
-                    {"amount": "Количество ингредиентов должно быть больше нуля"}
+                    {"amount": 
+                     "Количество ингредиентов должно быть больше нуля"}
                 )
             unique_ingredients.add(ingredient_id)
         return ingredients
@@ -223,7 +227,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
     def create_short_link(self):
         SHORT_LINK_LENGTH = 10
         current_domain = self.context["request"].get_host()
-        return f"{current_domain}/s/{get_random_string(length=SHORT_LINK_LENGTH)}"
+        return f"{current_domain}/s/{get_random_string(
+            length=SHORT_LINK_LENGTH)}"
 
     def create(self, validated_data):
         tags = validated_data.pop("tags")
@@ -290,5 +295,6 @@ class FavoriteCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self.context["request"].user
         recipe = validated_data.get("recipe")
-        favourite, created = Favourite.objects.get_or_create(user=user, recipe=recipe)
+        favourite, created = Favourite.objects.get_or_create(
+            user=user, recipe=recipe)
         return favourite

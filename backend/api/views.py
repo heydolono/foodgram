@@ -44,7 +44,8 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return RecipePostSerializer
 
-    @action(detail=True, methods=["get"], url_path="get-link", url_name="get-link")
+    @action(detail=True, methods=["get"],
+            url_path="get-link", url_name="get-link")
     def get_link(self, request, pk=None):
         recipe = self.get_object()
         short_link = recipe.short_link
@@ -75,7 +76,8 @@ class RecipeViewSet(ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(
-            {"errors": error_message_removed}, status=status.HTTP_400_BAD_REQUEST
+            {"errors": error_message_removed},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     @action(
@@ -87,7 +89,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk):
         return self.handle_favorite_or_shopping_cart(
-            request, pk, Favourite, "Рецепт уже был добавлен", "Рецепт уже был удален"
+            request, pk, Favourite,
+            "Рецепт уже был добавлен", "Рецепт уже был удален"
         )
 
     @action(
@@ -106,15 +109,18 @@ class RecipeViewSet(ModelViewSet):
             "Рецепт уже был удален",
         )
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["get"],
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         user = request.user
         if not user.shopping_cart.exists():
             return Response(
-                {"errors": "Корзина покупок пуста"}, status=status.HTTP_400_BAD_REQUEST
+                {"errors": "Корзина покупок пуста"},
+                status=status.HTTP_400_BAD_REQUEST
             )
         ingredients = (
-            IngredientRecipe.objects.filter(recipe__shopping_cart__user=request.user)
+            IngredientRecipe.objects.filter(
+                recipe__shopping_cart__user=request.user)
             .values("ingredient__name", "ingredient__measurement_unit")
             .annotate(amount=Sum("amount"))
         )
@@ -184,7 +190,8 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages, many=True, context={"request": request})
+        serializer = SubscribeSerializer(pages, 
+                                         many=True, context={"request": request})
         return self.get_paginated_response(serializer.data)
 
     @action(

@@ -8,12 +8,12 @@ class Tag(models.Model):
     """Класс модели Тег"""
 
     name = models.CharField(
-        max_length=50, 
-        verbose_name="Название тега", 
+        max_length=50,
+        verbose_name="Название тега",
         unique=True)
     color = models.CharField(
-        max_length=7, 
-        verbose_name="Цветовой HEX-код", 
+        max_length=7,
+        verbose_name="Цветовой HEX-код",
         unique=True)
     slug = models.SlugField(max_length=50, verbose_name="Слаг", unique=True)
 
@@ -29,10 +29,10 @@ class Ingredient(models.Model):
     """Класс модели Ингредиент"""
 
     name = models.CharField(
-        max_length=100, 
+        max_length=100,
         verbose_name="Название ингредиента")
     measurement_unit = models.CharField(
-        max_length=50, 
+        max_length=50,
         verbose_name="Единица измерения")
 
     class Meta:
@@ -116,7 +116,8 @@ class IngredientRecipe(models.Model):
         verbose_name_plural = "Ингредиенты и рецепты"
         constraints = [
             UniqueConstraint(
-                fields=["recipe", "ingredient"], name="unique_recipe_ingredient"
+                fields=[
+                    "recipe", "ingredient"], name="unique_recipe_ingredient"
             )
         ]
 
@@ -144,7 +145,8 @@ class Favourite(models.Model):
         verbose_name = "Избранное"
         verbose_name_plural = "Избранное"
         constraints = [
-            UniqueConstraint(fields=["user", "recipe"], name="unique_favourite")
+            UniqueConstraint(
+                fields=["user", "recipe"], name="unique_favourite")
         ]
 
     def __str__(self):
