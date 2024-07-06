@@ -14,7 +14,6 @@ from rest_framework.viewsets import ModelViewSet
 from recipes.models import (Favourite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from users.models import Subscribe
-
 from .filters import RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
@@ -122,7 +121,7 @@ class RecipeViewSet(ModelViewSet):
             IngredientRecipe.objects.filter(
                 recipe__shopping_cart__user=request.user)
             .values("ingredient__name", "ingredient__measurement_unit")
-            .annotate(amount=Sum("amount"))
+            .annotate(total_amount=Sum("amount"))
         )
         shopping_list = "Список покупок \n"
         shopping_items = []

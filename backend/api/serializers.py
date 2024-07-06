@@ -9,7 +9,6 @@ from recipes.models import (Favourite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from users.models import Subscribe, User
 from users.validators import validate_username
-
 from .fields import Base64ImageField
 
 
