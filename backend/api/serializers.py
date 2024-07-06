@@ -225,10 +225,9 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return tags
 
     def create_short_link(self):
-        SHORT_LINK_LENGTH = 10
+        LINK_LENGTH = 10
         current_domain = self.context["request"].get_host()
-        return f"{current_domain}/s/{get_random_string(
-            length=SHORT_LINK_LENGTH)}"
+        return f"{current_domain}/s/{get_random_string(length=LINK_LENGTH)}"
 
     def create(self, validated_data):
         tags = validated_data.pop("tags")

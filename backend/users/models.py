@@ -21,9 +21,11 @@ class User(AbstractUser):
         max_length=settings.USERNAME_LENGTH,
         validators=[validate_username],
     )
-    email = models.EmailField("Почта", unique=True, max_length=settings.EMAIL_LENGTH)
+    email = models.EmailField(
+        "Почта", unique=True, max_length=settings.EMAIL_LENGTH)
     first_name = models.CharField("Имя", blank=True, null=True, max_length=50)
-    last_name = models.CharField("Фамилия", blank=True, null=True, max_length=50)
+    last_name = models.CharField(
+        "Фамилия", blank=True, null=True, max_length=50)
     avatar = models.ImageField(
         upload_to="avatars/",
         null=True,
@@ -59,7 +61,8 @@ class Subscribe(models.Model):
     class Meta:
         ordering = ["author"]
         constraints = [
-            UniqueConstraint(fields=["user", "author"], name="unique_subscription")
+            UniqueConstraint(
+                fields=["user", "author"], name="unique_subscription")
         ]
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
