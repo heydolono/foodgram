@@ -66,17 +66,28 @@ class SubscribeSerializer(CustomUserSerializer):
         recipes = obj.recipes.all()
         if limit:
             recipes = recipes[: int(limit)]
-        return RecipeShortSerializer(recipes, many=True, read_only=True)
+        serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
+        return serializer.data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
     
+    def validate(self, data):
+        user = self.context["request"].user
+        author_id = data.get("author")
+        if self.context["request"].method == "POST":
+            if Subscribe.objects.filter(user=user, author_id=author_id).exists():
+                raise ValidationError("Вы уже подписаны на этого автора")
+        elif self.context["request"].method == "DELETE":
+            if not Subscribe.objects.filter(user=user, author_id=author_id).exists():
+                raise ValidationError("Вы не подписаны на этого автора")
+        return data
+    
     def create(self, validated_data):
         user = self.context['request'].user
-        author = validated_data['author']
-        subscription, created = Subscribe.objects.get_or_create(user=user, author=author)
+        author_id = validated_data['author']
+        subscription, created = Subscribe.objects.get_or_create(user=user, author_id=author_id)
         return subscription
-
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
