@@ -148,6 +148,7 @@ class TagViewSet(ModelViewSet):
     http_method_names = ["get"]
     pagination_class = None
 
+
 def redirect_short_link(request, short_link):
     full_short_link = f"{request.get_host()}/s/{short_link}"
     recipe = get_object_or_404(Recipe, short_link=full_short_link)
@@ -167,7 +168,7 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated],
     )
     def subscribe(self, request, **kwargs):
-        author_id = self.kwargs.get('id')
+        author_id = self.kwargs.get("id")
         author = get_object_or_404(User, id=author_id)
 
         if request.method == "POST":

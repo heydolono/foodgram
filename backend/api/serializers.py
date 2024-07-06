@@ -71,7 +71,7 @@ class SubscribeSerializer(CustomUserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
-    
+
     def validate(self, data):
         user = self.context["request"].user
         author_id = data.get("author")
@@ -82,12 +82,15 @@ class SubscribeSerializer(CustomUserSerializer):
             if not Subscribe.objects.filter(user=user, author_id=author_id).exists():
                 raise ValidationError("Вы не подписаны на этого автора")
         return data
-    
+
     def create(self, validated_data):
-        user = self.context['request'].user
-        author_id = validated_data['author']
-        subscription, created = Subscribe.objects.get_or_create(user=user, author_id=author_id)
+        user = self.context["request"].user
+        author_id = validated_data["author"]
+        subscription, created = Subscribe.objects.get_or_create(
+            user=user, author_id=author_id
+        )
         return subscription
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
