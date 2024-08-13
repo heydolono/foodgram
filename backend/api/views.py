@@ -188,23 +188,20 @@ class CustomUserViewSet(UserViewSet):
             serializer = SubscribeSerializer(author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         subscription = get_object_or_404(
-            Subscribe, user=request.user, author=author
-            )
+            Subscribe, user=request.user, author=author)
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=False, 
-            methods=["get"], 
-            permission_classes=[IsAuthenticated]
-            )
+            detail=False,
+            methods=["get"],
+            permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeSerializer(
-            pages, many=True, context={"request": request}
-            )
+            pages, many=True, context={"request": request})
         return self.get_paginated_response(serializer.data)
 
     @action(
