@@ -193,9 +193,10 @@ class CustomUserViewSet(UserViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=False,
-            methods=["get"],
-            permission_classes=[IsAuthenticated])
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsAuthenticated],
+        )
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
