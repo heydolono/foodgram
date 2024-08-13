@@ -146,6 +146,13 @@ class IngredientViewSet(ModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
 
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
+
 
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
@@ -180,20 +187,16 @@ class CustomUserViewSet(UserViewSet):
             Subscribe.objects.create(user=request.user, author_id=author_id)
             serializer = SubscribeSerializer(author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = get_object_or_404(
-            Subscribe, user=request.user, author=author)
+        subscription = get_object_or_404(Subscribe, user=request.user, author=author)
         subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT) 
 
-    @action(detail=False, methods=["get"],
-            permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages,
-                                         many=True,
-                                         context={"request": request})
+        serializer = SubscribeSerializer(pages, many=True, context={"request": request})
         return self.get_paginated_response(serializer.data)
 
     @action(
