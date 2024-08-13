@@ -196,7 +196,7 @@ class CustomUserViewSet(UserViewSet):
         detail=False,
         methods=["get"],
         permission_classes=[IsAuthenticated],
-        )
+    )
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriptions_sent__user=user)
